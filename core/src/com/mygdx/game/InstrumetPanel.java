@@ -4,32 +4,33 @@ package com.mygdx.game;
  * Created by TheParticleBridge on 01/08/2015.
  */
 
-import java.util.Iterator;
-
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
-public class MyGdxGame implements ApplicationListener {
+import java.util.Iterator;
+
+public class InstrumetPanel implements ApplicationListener {
     private Texture dropImage;
     private Texture bucketImage;
     private Sound dropSound;
     private Music rainMusic;
     private OrthographicCamera camera;
     private SpriteBatch batch;
-    private Rectangle bucket;
-    private Array<Rectangle> raindrops;
+    private Rectangle slider;
+    private Array<Rectangle> sevenseg;
     private long lastDropTime;
 
 
@@ -42,12 +43,12 @@ public class MyGdxGame implements ApplicationListener {
         //Load sprite
         batch = new SpriteBatch();
 
-        // create a Rectangle to logically represent the bucket
-        bucket = new Rectangle();
-        bucket.x = 800 / 2 - 64 / 2;
-        bucket.y = 20;
-        bucket.width = 64;
-        bucket.height = 64;
+        // create a Rectangle to logically represent the slider
+        slider = new Rectangle();
+        slider.x = 800 / 2 - 64 / 2;
+        slider.y = 20;
+        slider.width = 64;
+        slider.height = 64;
 
         // load the images for the droplet and the bucket, 64x64 pixels each
         dropImage = new Texture(Gdx.files.internal("droplet.png"));
@@ -55,23 +56,40 @@ public class MyGdxGame implements ApplicationListener {
 
         // load the drop sound effect and the rain background "music"
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
-        rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
 
-        // start the playback of the background music immediately
-        rainMusic.setLooping(true);
-        rainMusic.play();
-        raindrops = new Array<Rectangle>();
-        spawnRaindrop();
+
+        //Make a seven segment display
+        spawnSeg(500, 500, 20, 5);
     }
 
-    private void spawnRaindrop() {
-        Rectangle raindrop = new Rectangle();
-        raindrop.x = MathUtils.random(0, 800 - 64);
-        raindrop.y = 480;
-        raindrop.width = 64;
-        raindrop.height = 64;
-        raindrops.add(raindrop);
-        lastDropTime = TimeUtils.nanoTime();
+    private void spawnSeg(Float xpos, Float ypos, int segWidth) {
+        //Standrad seven segment display
+        // 4 long as wide
+        //  1xxx
+        // 2    7
+        // x    x
+        // x    x
+        // x    x
+        //  3xxx
+        // 4    6
+        // x    x
+        // x    x
+        // x    x
+        //  5xxx  8
+        sevenseg = new Array<Rectangle>();
+        Rectangle segment1  = new Rectangle();
+        Rectangle segment2  = new Rectangle();
+        Rectangle segment3  = new Rectangle();
+        Rectangle segment4  = new Rectangle();
+        Rectangle segment5  = new Rectangle();
+        Rectangle segment6  = new Rectangle();
+        Rectangle segment7  = new Rectangle();
+        Circle    segmentDp    = new Circle();
+        segment1.x = xpos+segWidth;//One segment from edge
+        segment1.y = ypos+segWidth;//One segment from top
+        segment1.width = segWidth;
+        segment1.height = segWigth*4;
+        sevenseg.add(segment);
     }
 
     @Override
@@ -92,8 +110,8 @@ public class MyGdxGame implements ApplicationListener {
 
         //begin new batch for bucket
         batch.begin();
-        batch.draw(bucketImage, bucket.x, bucket.y);
-        for (Rectangle raindrop : raindrops) {
+        batch.draw(bucketImage, slider.x, slider.y);
+        for (Rectangle raindrop : sevenseg) {
             batch.draw(dropImage, raindrop.x, raindrop.y);
         }
         batch.end();
@@ -103,12 +121,12 @@ public class MyGdxGame implements ApplicationListener {
             Vector3 touchPos = new Vector3();
             touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             camera.unproject(touchPos);
-            bucket.x = touchPos.x - 64 / 2;
+            slider.x = touchPos.x - 64 / 2;
         }
 
         //Keep bucket in screen
-        if (bucket.x < 0) bucket.x = 0;
-        if (bucket.x > 800 - 64) bucket.x = 800 - 64;
+        if (slider.x < 0) slider.x = 0;
+        if (slider.x > 800 - 64) slider.x = 800 - 64;
 
         //New raindrop
         if (TimeUtils.nanoTime() - lastDropTime > 1000000000) spawnRaindrop();
@@ -116,13 +134,13 @@ public class MyGdxGame implements ApplicationListener {
         // move the raindrops, remove any that are beneath the bottom edge of
         // the screen or that hit the bucket. In the later case we play back
         // a sound effect as well.
-        Iterator<Rectangle> iter = raindrops.iterator();
+        Iterator<Rectangle> iter = sevenseg.iterator();
         while (iter.hasNext()) {
             Rectangle raindrop = iter.next();
             raindrop.y -= 200 * Gdx.graphics.getDeltaTime();
             if (raindrop.y + 64 < 0) iter.remove();
             //bucket raindrop collision
-            if (raindrop.overlaps(bucket)) {
+            if (raindrop.overlaps(slider)) {
                 dropSound.play();
                 iter.remove();
             }
