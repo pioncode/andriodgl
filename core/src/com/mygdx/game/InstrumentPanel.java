@@ -4,6 +4,8 @@ package com.mygdx.game;
  * Created by TheParticleBridge on 01/08/2015.
  */
 
+import java.util.Arrays;
+import com.mygdx.game.SevenSeg;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
@@ -12,6 +14,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -20,9 +23,10 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
-public class InstrumetPanel implements ApplicationListener {
+public class InstrumentPanel implements ApplicationListener {
     private Texture dropImage;
     private Texture bucketImage;
     private Sound dropSound;
@@ -30,8 +34,8 @@ public class InstrumetPanel implements ApplicationListener {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Rectangle slider;
-    private Array<Rectangle> sevenseg;
     private long lastDropTime;
+    public SevenSeg sevenseg;
 
 
     @Override
@@ -51,46 +55,19 @@ public class InstrumetPanel implements ApplicationListener {
         slider.height = 64;
 
         // load the images for the droplet and the bucket, 64x64 pixels each
-        dropImage = new Texture(Gdx.files.internal("droplet.png"));
-        bucketImage = new Texture(Gdx.files.internal("bucket.png"));
+     //   dropImage = new Texture(Gdx.files.internal("ss_dp.png"));
+    //
+    //
+      bucketImage = new Texture(Gdx.files.internal("bucket.png"));
 
         // load the drop sound effect and the rain background "music"
-        dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
-
-
-        //Make a seven segment display
-        spawnSeg(500, 500, 20, 5);
+    //    dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
+    //Display
+        sevenseg= new SevenSeg();
+        sevenseg.setSevenSeg();
     }
 
-    private void spawnSeg(Float xpos, Float ypos, int segWidth) {
-        //Standrad seven segment display
-        // 4 long as wide
-        //  1xxx
-        // 2    7
-        // x    x
-        // x    x
-        // x    x
-        //  3xxx
-        // 4    6
-        // x    x
-        // x    x
-        // x    x
-        //  5xxx  8
-        sevenseg = new Array<Rectangle>();
-        Rectangle segment1  = new Rectangle();
-        Rectangle segment2  = new Rectangle();
-        Rectangle segment3  = new Rectangle();
-        Rectangle segment4  = new Rectangle();
-        Rectangle segment5  = new Rectangle();
-        Rectangle segment6  = new Rectangle();
-        Rectangle segment7  = new Rectangle();
-        Circle    segmentDp    = new Circle();
-        segment1.x = xpos+segWidth;//One segment from edge
-        segment1.y = ypos+segWidth;//One segment from top
-        segment1.width = segWidth;
-        segment1.height = segWigth*4;
-        sevenseg.add(segment);
-    }
+
 
     @Override
     public void render() {
@@ -108,16 +85,30 @@ public class InstrumetPanel implements ApplicationListener {
         // coordinate system specified by the camera.
         batch.setProjectionMatrix(camera.combined);
 
-        //begin new batch for bucket
+        //Standrad seven segment display
+        // 4 long as wide
+        //  1xxx
+        // 2    7
+        // x    x
+        // x    x
+        // x    x
+        //  3xxx
+        // 4    6
+        // x    x
+        // x    x
+        // x    x
+        //  5xxx  8
         batch.begin();
+
         batch.draw(bucketImage, slider.x, slider.y);
-        for (Rectangle raindrop : sevenseg) {
-            batch.draw(dropImage, raindrop.x, raindrop.y);
-        }
+;     //  batch.setColor(1, 0, 0, 1);
+
+     // batch.draw(dropImage, 50, 50, 5, 20);
+        sevenseg.setRenderBatchSS(batch);
         batch.end();
 
         //Monitor user input
-        if (Gdx.input.isTouched()) {
+        /*if (Gdx.input.isTouched()) {
             Vector3 touchPos = new Vector3();
             touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             camera.unproject(touchPos);
@@ -145,16 +136,12 @@ public class InstrumetPanel implements ApplicationListener {
                 iter.remove();
             }
         }
+        */
     }
 
 
     @Override
     public void dispose() {
-        dropImage.dispose();
-        bucketImage.dispose();
-        dropSound.dispose();
-        rainMusic.dispose();
-        batch.dispose();
     }
 
     @Override
